@@ -20,7 +20,7 @@ type Hub struct {
 	connections    []*WebConn
 	register       chan *WebConn
 	unregister     chan *WebConn
-	broadcast      chan *model.WebSocketEvent
+	broadcast      chan model.WebSocketEvent
 	stop           chan string
 	invalidateUser chan string
 	ExplicitStop   bool
@@ -33,7 +33,7 @@ func NewWebHub() *Hub {
 		register:       make(chan *WebConn),
 		unregister:     make(chan *WebConn),
 		connections:    make([]*WebConn, 0, model.SESSION_CACHE_SIZE),
-		broadcast:      make(chan *model.WebSocketEvent, 4096),
+		broadcast:      make(chan model.WebSocketEvent, 4096),
 		stop:           make(chan string),
 		invalidateUser: make(chan string),
 		ExplicitStop:   false,
@@ -88,7 +88,7 @@ func HubUnregister(webConn *WebConn) {
 	GetHubForUserId(webConn.UserId).Unregister(webConn)
 }
 
-func Publish(message *model.WebSocketEvent) {
+func Publish(message model.WebSocketEvent) {
 
 	if metrics := einterfaces.GetMetricsInterface(); metrics != nil {
 		metrics.IncrementWebsocketEvent(message.Event)
@@ -103,7 +103,7 @@ func Publish(message *model.WebSocketEvent) {
 	}
 }
 
-func PublishSkipClusterSend(message *model.WebSocketEvent) {
+func PublishSkipClusterSend(message model.WebSocketEvent) {
 	for _, hub := range hubs {
 		hub.Broadcast(message)
 	}
@@ -224,10 +224,8 @@ func (h *Hub) Unregister(webConn *WebConn) {
 	h.unregister <- webConn
 }
 
-func (h *Hub) Broadcast(message *model.WebSocketEvent) {
-	if message != nil {
-		h.broadcast <- message
-	}
+func (h *Hub) Broadcast(message model.WebSocketEvent) {
+	h.broadcast <- message
 }
 
 func (h *Hub) InvalidateUser(userId string) {

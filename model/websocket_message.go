@@ -48,35 +48,34 @@ type WebsocketBroadcast struct {
 }
 
 type WebSocketEvent struct {
-	Event          string                 `json:"event"`
-	Data           map[string]interface{} `json:"data"`
-	Broadcast      *WebsocketBroadcast    `json:"broadcast"`
-	Sequence       uint64                 `json:"seq"`
-	PreComputeJson []byte                 `json:"-"`
+	Event     string                 `json:"event"`
+	Data      map[string]interface{} `json:"data"`
+	Broadcast *WebsocketBroadcast    `json:"broadcast"`
+	Sequence  uint64                 `json:"seq"`
 }
 
-func (m *WebSocketEvent) Add(key string, value interface{}) {
+func (m WebSocketEvent) Add(key string, value interface{}) {
 	m.Data[key] = value
 }
 
-func NewWebSocketEvent(event, teamId, channelId, userId string, omitUsers map[string]bool) *WebSocketEvent {
-	return &WebSocketEvent{Event: event, Data: make(map[string]interface{}),
+func NewWebSocketEvent(event, teamId, channelId, userId string, omitUsers map[string]bool) WebSocketEvent {
+	return WebSocketEvent{Event: event, Data: make(map[string]interface{}),
 		Broadcast: &WebsocketBroadcast{TeamId: teamId, ChannelId: channelId, UserId: userId, OmitUsers: omitUsers}}
 }
 
-func (o *WebSocketEvent) IsValid() bool {
+func (o WebSocketEvent) IsValid() bool {
 	return o.Event != ""
 }
 
-func (o *WebSocketEvent) EventType() string {
+func (o WebSocketEvent) EventType() string {
 	return o.Event
 }
 
-func (o *WebSocketEvent) SetSequence(seq uint64) {
+func (o WebSocketEvent) SetSequence(seq uint64) {
 	o.Sequence = seq
 }
 
-func (o *WebSocketEvent) ToJson() string {
+func (o WebSocketEvent) ToJson() string {
 	b, err := json.Marshal(o)
 	if err != nil {
 		return ""
@@ -97,37 +96,36 @@ func WebSocketEventFromJson(data io.Reader) *WebSocketEvent {
 }
 
 type WebSocketResponse struct {
-	Status         string                 `json:"status"`
-	SeqReply       int64                  `json:"seq_reply,omitempty"`
-	Data           map[string]interface{} `json:"data,omitempty"`
-	Error          *AppError              `json:"error,omitempty"`
-	PreComputeJson []byte                 `json:"-"`
+	Status   string                 `json:"status"`
+	SeqReply int64                  `json:"seq_reply,omitempty"`
+	Data     map[string]interface{} `json:"data,omitempty"`
+	Error    *AppError              `json:"error,omitempty"`
 }
 
-func (m *WebSocketResponse) Add(key string, value interface{}) {
+func (m WebSocketResponse) Add(key string, value interface{}) {
 	m.Data[key] = value
 }
 
-func NewWebSocketResponse(status string, seqReply int64, data map[string]interface{}) *WebSocketResponse {
-	return &WebSocketResponse{Status: status, SeqReply: seqReply, Data: data}
+func NewWebSocketResponse(status string, seqReply int64, data map[string]interface{}) WebSocketResponse {
+	return WebSocketResponse{Status: status, SeqReply: seqReply, Data: data}
 }
 
-func NewWebSocketError(seqReply int64, err *AppError) *WebSocketResponse {
-	return &WebSocketResponse{Status: STATUS_FAIL, SeqReply: seqReply, Error: err}
+func NewWebSocketError(seqReply int64, err *AppError) WebSocketResponse {
+	return WebSocketResponse{Status: STATUS_FAIL, SeqReply: seqReply, Error: err}
 }
 
-func (o *WebSocketResponse) IsValid() bool {
+func (o WebSocketResponse) IsValid() bool {
 	return o.Status != ""
 }
 
-func (o *WebSocketResponse) EventType() string {
+func (o WebSocketResponse) EventType() string {
 	return ""
 }
 
-func (o *WebSocketResponse) SetSequence(seq uint64) {
+func (o WebSocketResponse) SetSequence(seq uint64) {
 }
 
-func (o *WebSocketResponse) ToJson() string {
+func (o WebSocketResponse) ToJson() string {
 	b, err := json.Marshal(o)
 	if err != nil {
 		return ""

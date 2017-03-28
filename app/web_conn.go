@@ -105,13 +105,17 @@ func (c *WebConn) WritePump() {
 				return
 			}
 
-			//msgCopy := *msg
-			//msgCopy.Sequence = c.Sequence
-			msg.SetSequence(c.Sequence)
-			c.Sequence++
+			var msgBytes []byte
+			if evt, ok := msg.(model.WebSocketEvent); ok {
+				evt.Sequence = c.Sequence
+				c.Sequence++
+				msgBytes = []byte(evt.ToJson())
+			} else {
+				msgBytes = []byte(msg.ToJson())
+			}
 
 			c.WebSocket.SetWriteDeadline(time.Now().Add(WRITE_WAIT))
-			if err := c.WebSocket.WriteMessage(websocket.TextMessage, []byte(msg.ToJson())); err != nil {
+			if err := c.WebSocket.WriteMessage(websocket.TextMessage, msgBytes); err != nil {
 				// browsers will appear as CloseNoStatusReceived
 				if websocket.IsCloseError(err, websocket.CloseNormalClosure, websocket.CloseNoStatusReceived) {
 					l4g.Debug(fmt.Sprintf("websocket.send: client side closed socket userId=%v", c.UserId))
@@ -188,7 +192,7 @@ func (webCon *WebConn) SendHello() {
 	webCon.Send <- msg
 }
 
-func (webCon *WebConn) ShouldSendEvent(msg *model.WebSocketEvent) bool {
+func (webCon *WebConn) ShouldSendEvent(msg model.WebSocketEvent) bool {
 	// IMPORTANT: Do not send event if WebConn does not have a session
 	if !webCon.IsAuthenticated() {
 		return false
